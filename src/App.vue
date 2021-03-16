@@ -27,7 +27,7 @@
           <div v-if="!task.isCompleted" class="task" :key="`pending-${task.id}`" >
             <div class="column"> {{task.name}} </div>
             <div class="column"> 
-              <div class="button bg-white" @click="task.isCompleted = true"> 
+              <div class="button bg-white" @click="updateStatus(task)"> 
                 
                </div> 
             </div>
@@ -43,7 +43,7 @@
       <div v-if="task.isCompleted" class="task" :key="`completed-${task.id}`">
       <div class="column"> {{task.name}} </div>
       <div class="column"> 
-        <div class="button bg-orange" @click="task.isCompleted = false"> 
+        <div class="button bg-orange" @click="updateStatus(task)"> 
           <img src="./assets/check.png">
         </div>
       </div>
@@ -58,6 +58,7 @@
 <script>
 
 import clonedeep from 'lodash.clonedeep';
+import axios from 'axios';
 
 export default {
   
@@ -79,28 +80,27 @@ export default {
       }
     }
   },
-
+  created() {
+    this.loadTasks();
+  },
   methods: {
-    addTask (task) {
+    async loadTasks() {
+      let tasks = await axios.get("https://us-central1-to-do-list-peyton.cloudfunctions.net/api/tasks");
+      this.db.tasks = tasks.data;
+    },
+    async addTask (task) {
       if (!this.newTask.name) return;
-      if (this.newTask.name.includes('grocer')) {
-        this.hasMessage = true;
-        this.message = "this is not a job for Peyton, reserved for Meghan";
-        return;
-      } else {
-        this.message = "";
-        this.hasMessage = false
-      }
-      if (!this.db.tasks.length) {
-        task.id = 1;
-      } else {
-        task.id = this.db.tasks[0].id++
-      }
-      console.log(this.db.tasks)
+      console.log(this.db.tasks);
       this.db.tasks.push(clonedeep(task));
-      this.newTask.name = "";
       this.isActive = false;
-      
+      await axios.post(`https://us-central1-to-do-list-peyton.cloudfunctions.net/api/task?id=${task.id}`, task);
+      this.loadTasks();
+      this.newTask.name = "";
+    },
+    async updateStatus (task) {
+      task.isCompleted = !task.isCompleted;
+      await axios.patch(`https://us-central1-to-do-list-peyton.cloudfunctions.net/api/task?id=${task.id}`, task);
+      this.loadTasks();
     }
   }
 
@@ -130,7 +130,7 @@ export default {
     padding-left: 25px
 }
 .task {
-  background-color: #EDEDED;
+  background-color: #eee;
     font-size: 18px;
     color: black;
     margin: 1em auto;
@@ -150,7 +150,7 @@ export default {
   justify-content: center;
 }
 .bg-orange {
-    background-color: #FFB33D;
+    background-color: mediumaquamarine;
 }
 .bg-white {
     background-color: #FFF;

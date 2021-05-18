@@ -70,7 +70,7 @@ export default {
       message: "123",
       newTask: {
         name: "",
-        isCompleted: false,
+        isCompleted: false
       },
       db: {
         tasks: [],
@@ -80,6 +80,7 @@ export default {
   created() {
     this.loadTasks();
   },
+
   methods: {
     async loadTasks() {
       let tasks = await axios.get(
@@ -106,6 +107,7 @@ export default {
         task
       );
       this.loadTasks();
+      console.log(task.isCompleted);
     },
     async updateTask(task) {
       await axios.patch(
